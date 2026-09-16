@@ -49,16 +49,39 @@ function createGame({
   let rollTimer;
   let beforeRoll;
   const audio = {};
+  let audioErrorShown = false;
+  function audioError(name, error) {
+    console.warn(`[dice audio] ${name}`, error);
+    if (alive && state.soundEnabled && !audioErrorShown) {
+      audioErrorShown = true;
+      toast("音效暂时无法播放，请重新打开小游戏");
+    }
+  }
+  function configureAudio() {
+    try {
+      if (typeof wxApi.setInnerAudioOption === "function") {
+        // Current iOS clients use the global option; the in-game switch
+        // remains the user's control over whether effects are played.
+        wxApi.setInnerAudioOption({
+          obeyMuteSwitch: false,
+          fail: (error) => console.warn("[dice audio] options", error),
+        });
+      }
+    } catch (error) { console.warn("[dice audio] options", error); }
+  }
+  configureAudio();
   for (const name of ["rolling", "landing"]) {
     try {
       if (typeof wxApi.createInnerAudioContext !== "function") break;
       const player = wxApi.createInnerAudioContext();
+      if (player.onError) player.onError((error) => audioError(name, error));
+      player.autoplay = false;
+      player.loop = false;
+      player.volume = name === "rolling" ? 0.65 : 0.7;
+      player.obeyMuteSwitch = false;
       player.src = `assets/${name}.wav`;
-      player.volume = name === "rolling" ? 0.35 : 0.4;
-      player.obeyMuteSwitch = true;
-      if (player.onError) player.onError(() => {});
       audio[name] = player;
-    } catch (_) {}
+    } catch (error) { audioError(name, error); }
   }
   function update() {
     if (alive) invalidate();
@@ -67,7 +90,9 @@ function createGame({
     for (const key of name ? [name] : Object.keys(audio)) {
       try {
         if (audio[key] && typeof audio[key][method] === "function") audio[key][method]();
-      } catch (_) {}
+      } catch (error) {
+        if (method === "play") audioError(key, error);
+      }
     }
   }
   function toast(title) {
@@ -218,7 +243,11 @@ function createGame({
     const { action, value } = target;
     if (action === "sound") {
       state.soundEnabled = !state.soundEnabled;
-      if (!state.soundEnabled) sound("stop");
+      sound("stop");
+      if (state.soundEnabled) {
+        configureAudio();
+        sound("play", state.rolling ? "rolling" : "landing");
+      }
       saveGame();
     } else if (action === "togglePhotos") {
       state.photoOpen = !state.photoOpen;

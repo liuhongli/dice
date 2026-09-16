@@ -13,13 +13,14 @@ function deferred() {
   const promise = new Promise((yes, no) => { resolve = yes; reject = no; });
   return { promise, resolve, reject };
 }
-function harness({ saved = {}, photos = defaults(), randomRoll, select } = {}) {
+function harness({ saved = {}, photos = defaults(), randomRoll, select, withAudio = false } = {}) {
   let time = 10000;
   let timerId = 0;
   const timers = new Map();
   const observed = {
     rolls: [], saves: [], removals: [], toasts: [], selected: [], invalidations: 0, clears: 0,
     photos: clone(photos), files: new Set([photos.single, ...photos.faces].filter(Boolean)),
+    audio: [], audioOptions: [], players: [],
   };
   const photoStore = {
     defaultSettings: defaults,
@@ -52,6 +53,19 @@ function harness({ saved = {}, photos = defaults(), randomRoll, select } = {}) {
     showToast: ({ title }) => observed.toasts.push(title),
     showModal: ({ success }) => success({ confirm: observed.confirm !== false }),
   };
+  if (withAudio) {
+    wxApi.setInnerAudioOption = (options) => observed.audioOptions.push(options);
+    wxApi.createInnerAudioContext = () => {
+      const player = {
+        onError(callback) { this.fail = callback; },
+        play() { observed.audio.push(["play", this.src]); },
+        stop() { observed.audio.push(["stop", this.src]); },
+        destroy() { observed.audio.push(["destroy", this.src]); },
+      };
+      observed.players.push(player);
+      return player;
+    };
+  }
   const game = createGame({
     wxApi, photoStore,
     now: () => time,
@@ -95,6 +109,65 @@ test("game locks repeat taps and edits until exactly two seconds after the roll 
   assert.deepEqual(h.game.state.values, [1, 6]);
   assert.deepEqual(h.game.state.history, [{ values: [1, 6], time: 12000 }]);
   assert.deepEqual(h.observed.saves.at(-1)[1].history, h.game.state.history);
+});
+
+test("enabled effects override iOS silent mode and play the roll then landing on consecutive throws", async () => {
+  const h = harness({ withAudio: true });
+  assert.equal(h.observed.audioOptions[0].obeyMuteSwitch, false);
+  assert.ok(h.observed.players.every((player) => player.obeyMuteSwitch === false && player.volume > 0));
+  for (let attempt = 0; attempt < 2; attempt++) {
+    h.observed.audio.length = 0;
+    await h.action("roll");
+    assert.deepEqual(h.observed.audio, [
+      ["stop", "assets/rolling.wav"], ["stop", "assets/landing.wav"], ["play", "assets/rolling.wav"],
+    ]);
+    h.advance(1999);
+    assert.equal(h.observed.audio.length, 3);
+    h.advance(1);
+    assert.deepEqual(h.observed.audio.slice(-3), [
+      ["stop", "assets/rolling.wav"], ["stop", "assets/landing.wav"], ["play", "assets/landing.wav"],
+    ]);
+  }
+});
+
+test("the sound switch persists mute, previews enabling, and stops an active roll without a later landing effect", async () => {
+  const h = harness({ withAudio: true, saved: { soundEnabled: false } });
+  await h.action("roll"); h.advance(2000);
+  assert.equal(h.observed.audio.some(([action]) => action === "play"), false);
+  h.action("sound");
+  assert.deepEqual(h.observed.audio.at(-1), ["play", "assets/landing.wav"]);
+  assert.equal(h.observed.saves.at(-1)[1].soundEnabled, true);
+  await h.action("roll");
+  h.action("sound");
+  h.observed.audio.length = 0;
+  h.advance(2000);
+  assert.equal(h.observed.audio.some(([action]) => action === "play"), false);
+  assert.equal(h.observed.saves.at(-1)[1].soundEnabled, false);
+});
+
+test("hiding or destroying stops both players and prevents delayed playback", async () => {
+  for (const method of ["hide", "destroy"]) {
+    const h = harness({ withAudio: true });
+    await h.action("roll"); h.advance(600);
+    h.observed.audio.length = 0;
+    h.game[method](); h.advance(3000);
+    assert.deepEqual(h.observed.audio.slice(0, 2), [["stop", "assets/rolling.wav"], ["stop", "assets/landing.wav"]]);
+    assert.equal(h.observed.audio.some(([action]) => action === "play"), false);
+    if (method === "destroy") assert.equal(h.observed.audio.filter(([action]) => action === "destroy").length, 2);
+  }
+});
+
+test("audio failures are reported once without interrupting dice results", async (t) => {
+  const warnings = [];
+  t.mock.method(console, "warn", (...args) => warnings.push(args));
+  const h = harness({ withAudio: true });
+  await h.action("roll");
+  for (const player of h.observed.players) player.fail({ errCode: 10003, errMsg: "decode failed" });
+  h.advance(2000);
+  assert.equal(h.game.state.resultReady, true);
+  assert.equal(warnings.length, 2);
+  assert.equal(h.observed.toasts.length, 1);
+  assert.match(h.observed.toasts[0], /音效暂时无法播放/);
 });
 
 test("hiding rolls back a pending target and ignores old random callbacks after a new roll", async () => {

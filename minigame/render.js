@@ -154,7 +154,7 @@ function createRenderer(canvas, initialMetrics) {
     star(x + w - 13, y - 8, 9, COLORS.gold, 0.2);
     text('一点点运气，满满的快乐。', width / 2, y + 28, 12, COLORS.muted, 'center');
     y += 52;
-    const stageY = y, stageH = count > 3 ? 262 : 190;
+    const stageY = y, stageH = count > 3 ? 248 : count === 1 ? 190 : 174;
     box(x, y, w, stageH, '#eaf0e3', 21, COLORS.line);
     ctx.save(); roundRect(x + 3, y + 3, w - 6, stageH - 6, 19); ctx.clip();
     for (let dotX = x + 12; dotX < x + w; dotX += 16) for (let dotY = y + 12; dotY < y + stageH; dotY += 16) circle(dotX, dotY, 0.9, '#d7e2cd');
@@ -168,23 +168,20 @@ function createRenderer(canvas, initialMetrics) {
     star(x + 29, y + 71, 10, '#afc595', progress * 3); star(x + w - 31, y + stageH - 44, 6, '#aec694', 0.2);
     const cols = count === 1 ? 1 : count === 2 ? 2 : 3;
     const rows = count > 3 ? 2 : 1;
-    const rowH = rows === 2 ? 98 : 112;
+    const rowH = rows === 2 ? 91 : 112;
     const size = count === 1 ? 86 : count === 2 ? 65 : Math.min(55, (w - 32) / 4.9);
     for (let i = 0; i < count; i++) {
       const row = Math.floor(i / cols), itemsInRow = Math.min(cols, count - row * cols);
       const spacing = (w - 20) / cols;
       const centerX = width / 2 + (i % cols - (itemsInRow - 1) / 2) * spacing;
-      const centerY = y + (rows === 2 ? 80 : 97) + row * rowH;
+      const centerY = y + (rows === 2 ? 80 : count === 1 ? 97 : 90) + row * rowH;
       drawDie(values[i], centerX, centerY, size, progress, i, photos, state.rolling);
-      const labelY = centerY + (count === 1 ? 59 : rows === 2 ? 42 : 48);
-      box(centerX - 21, labelY - 10, 42, 21, 'rgba(255,254,248,0.92)', 10, '#d9e4ce');
-      text(state.rolling ? '…' : `${values[i]} 点`, centerX, labelY + 1, 12, COLORS.green, 'center', 'bold');
     }
     text(state.rolling ? '转呀转，好运马上到！' : '小小骰子，大大可能', width / 2, y + stageH - 15, 11, '#8ca476', 'center');
     if (state.rolling) box(x + 14, y + stageH - 3, Math.max(1, (w - 28) * progress), 3, COLORS.green, 1.5);
     y += stageH + 14;
 
-    box(x, y, w, 281, COLORS.white, 19, COLORS.line);
+    box(x, y, w, 210, COLORS.white, 19, COLORS.line);
     text('LET’S PLAY', x + pad, y + 22, 9, '#95a47c', 'left', 'bold');
     text('今天，玩几颗？', x + pad, y + 49, 20, COLORS.ink, 'left', 'bold');
     tinyDie(x + w - 33, y + 18, 15, COLORS.white, '#a3b58d');
@@ -192,19 +189,13 @@ function createRenderer(canvas, initialMetrics) {
     for (let n = 1; n <= 6; n++) button(x + pad + (n - 1) * (optionW + optionGap), y + 75, optionW, 39, n, 'count', n, n === count, busy, 19);
     text(`${count} 颗骰子`, x + pad, y + 129, 10, COLORS.muted);
     text('每颗 1–6 点', x + w - pad, y + 129, 10, COLORS.muted, 'right');
-    box(x + pad, y + 145, inner, 57, COLORS.pale, 11, '#e2e8d9');
-    text(state.rolling ? '好运转起来…' : state.resultReady ? '这次的好运' : '准备就绪', x + pad + 13, y + 163, 12, '#728867', 'left', 'bold');
-    const detail = state.rolling ? '等一下，惊喜马上揭晓' : state.resultReady ? values.join(' + ') + (count > 1 ? ' 点' : ' 点，小小幸运！') : '下一次，会是几点呢？';
-    text(detail, x + pad + 13, y + 185, count > 4 ? 11 : 12, COLORS.muted);
-    const total = values.reduce((sum, value) => sum + value, 0);
-    text(state.rolling ? '…' : state.resultReady ? total : '?', x + w - pad - 13, y + 174, 34, COLORS.green, 'right', 'bold');
-    const btnY = y + 216;
+    const btnY = y + 145;
     ctx.save(); if (busy) ctx.globalAlpha = 0.68;
     box(x + pad, btnY + 3, inner, 47, '#24634f', 13); box(x + pad, btnY, inner, 47, COLORS.green, 13);
     tinyDie(x + pad + 21, btnY + 16, 16, COLORS.green, COLORS.white);
     text(state.rolling ? '好运转起来…' : state.photoBusy ? '照片准备中…' : '掷出好运', width / 2, btnY + 24, 19, COLORS.white, 'center', 'bold');
     text('→', x + w - pad - 24, btnY + 24, 23, '#d6ead8', 'center'); ctx.restore(); region(x + pad, btnY, inner, 50, 'roll', undefined, busy);
-    y += 295;
+    y += 224;
 
     const photoY = y;
     let photoH = 73;
