@@ -1,8 +1,8 @@
 {
-  "description": "骰子派对 · 亲子掷骰子微信小程序",
-  "miniprogramRoot": "miniprogram/",
-  "compileType": "miniprogram",
-  "appid": "touristappid",
+  "description": "骰子派对 · 亲子掷骰子微信小游戏",
+  "miniprogramRoot": "minigame/",
+  "compileType": "game",
+  "appid": "wxc553814253040b0e",
   "projectname": "dice-party",
   "setting": {
     "es6": true,
@@ -11,10 +11,33 @@
     "minified": true,
     "minifyWXSS": true,
     "minifyWXML": true,
-    "urlCheck": true
+    "urlCheck": true,
+    "compileWorklet": false,
+    "uglifyFileName": false,
+    "uploadWithSourceMap": true,
+    "packNpmManually": false,
+    "packNpmRelationList": [],
+    "localPlugins": false,
+    "disableUseStrict": false,
+    "useCompilerPlugins": false,
+    "condition": false,
+    "babelSetting": {
+      "ignore": [],
+      "disablePlugins": [],
+      "outputPath": ""
+    }
   },
   "packOptions": {
-    "ignore": [{ "type": "file", "value": "package.json" }]
+    "ignore": [
+      {
+        "value": "package.json",
+        "type": "file"
+      }
+    ],
+    "include": []
   },
-  "condition": {}
+  "condition": {},
+  "simulatorPluginLibVersion": {},
+  "editorSetting": {},
+  "isGameTourist": false
 }

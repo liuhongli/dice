@@ -7,7 +7,7 @@
 ## 导入预览
 
 1. 从[微信官方页面](https://developers.weixin.qq.com/miniprogram/dev/devtools/download.html)安装微信开发者工具，使用微信扫码登录。
-2. 选择“导入项目”，项目目录选择整个 `dice` 仓库根目录，也就是包含 `project.config.json` 的目录，不是当前 `miniprogram` 子目录。
+2. 选择“导入项目”，项目目录选择当前 `miniprogram` 目录，其中已包含独立的 `project.config.json`。仓库根目录现用于微信小游戏；本目录用于普通微信小程序，两者需要各自对应类型的 AppID。
 3. 已有小程序 AppID 时，填入自己的 AppID。仓库中的 `touristappid` 是开发预览占位值；开发者工具是否允许测试号及可用接口，以工具提示为准。
 4. 选择“小程序”项目，使用稳定版基础库，至少 2.32.3。点击“编译”。原生项目不需要执行“构建 npm”。
 5. 使用真实 AppID 后，点击“预览”，用有权限的微信账号扫码检查实际手机效果。
