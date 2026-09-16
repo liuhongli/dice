@@ -1,0 +1,16 @@
+{
+  "name": "dice-party",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "给大小朋友的快乐掷骰子小网页",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "vite build --base=./",
+    "preview": "vite preview --host 0.0.0.0",
+    "test": "node --test"
+  },
+  "devDependencies": {
+    "vite": "^7.1.7"
+  }
+}
