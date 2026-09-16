@@ -234,6 +234,35 @@ test("rolling locks repeat taps and count edits, then reveals the chosen top fac
   );
 });
 
+test("an unavailable WeChat random API still reveals dice after two seconds without an error toast", async (t) => {
+  const draws = [0, 0.999999];
+  t.mock.method(Math, "random", () => draws.shift() ?? 0.5);
+  const wxApi = {
+    getRandomValues({ fail }) {
+      fail({ errMsg: "getRandomValues:fail not supported" });
+    },
+  };
+  const { page, state, clock } = makePage({
+    count: 2,
+    roll: (count) => diceUtilities.rollDice(count, wxApi),
+  });
+
+  await page.onRoll();
+  clock.advance(1999);
+  assert.equal(page.data.rolling, true);
+  assert.equal(page.data.history.length, 0);
+  clock.advance(1);
+
+  assert.equal(page.data.rolling, false);
+  assert.equal(page.data.totalText, "7");
+  assert.deepEqual(page.data.history[0].values, [1, 6]);
+  assert.deepEqual(
+    page.data.dice.map(({ value, rx, ry }) => [value, rx, ry]),
+    [[1, 90, 0], [6, -90, 0]],
+  );
+  assert.equal(state.operations.some(([name]) => name === "toast"), false);
+});
+
 test("a slow random source does not restart the two-second animation after it responds", async () => {
   const pending = deferred();
   const { page, clock } = makePage({ roll: () => pending.promise });

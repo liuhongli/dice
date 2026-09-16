@@ -25,7 +25,7 @@
 
 ## 数据与实现
 
-- 点数优先使用 `wx.getUserCryptoManager().getRandomValues()` 并拒绝取模偏差；缺少该 API 的旧环境使用普通随机数，仅用于亲子桌游。
+- 点数优先使用 `wx.getRandomValues()` 并拒绝取模偏差；接口缺失、调用失败、返回异常或 500 毫秒内未完成时，自动使用本地随机数为每颗骰子独立取值，避免投掷中断。随机数仅用于亲子桌游。
 - 顶面映射与网页版相同，六组旋转均有自动测试。
 - 选择照片使用 `wx.chooseMedia`，来源限定为相册。单张最大 20 MB，保存前压缩至长边不超过 640 像素。
 - 图片设置写入成功后才清理被替换的旧图片。准备一批照片失败时保留原设置。
@@ -37,6 +37,6 @@
 ## 官方 API 参考
 
 - [选择照片](https://developers.weixin.qq.com/miniprogram/dev/api/media/video/wx.chooseMedia.html)
-- [随机数](https://developers.weixin.qq.com/miniprogram/dev/api/base/crypto/UserCryptoManager.getRandomValues.html)
+- [随机数](https://developers.weixin.qq.com/miniprogram/dev/api/device/crypto/wx.getRandomValues.html)
 - [隐私授权](https://developers.weixin.qq.com/miniprogram/dev/api/open-api/privacy/wx.requirePrivacyAuthorize.html)
 - [隐私授权事件](https://developers.weixin.qq.com/miniprogram/dev/api/open-api/privacy/wx.onNeedPrivacyAuthorization.html)

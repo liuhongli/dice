@@ -1,4 +1,5 @@
 const MAX_DICE = 6;
+const RANDOM_TIMEOUT = 500;
 
 // Opposite faces add up to seven, matching the web version's physical cube.
 const FACE_VALUES = Object.freeze({
@@ -27,58 +28,85 @@ function normalizeDiceCount(value) {
   return Math.min(MAX_DICE, Math.max(1, Math.trunc(count)));
 }
 
-function randomBytes(manager, length) {
+function randomBytes(wxApi, length, timeout) {
   return new Promise((resolve, reject) => {
-    manager.getRandomValues({
-      length,
-      success(result) {
-        const buffer = result && result.randomValues;
-        if (!(buffer instanceof ArrayBuffer) || buffer.byteLength !== length) {
-          reject(new Error("随机点数生成失败，请再掷一次。"));
-          return;
-        }
-        resolve(new Uint8Array(buffer));
-      },
-      fail() {
-        reject(new Error("随机点数生成失败，请再掷一次。"));
-      },
-    });
+    let settled = false;
+    const fail = () => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      reject(new Error("随机点数生成失败，请再掷一次。"));
+    };
+    const timer = setTimeout(fail, timeout);
+    try {
+      wxApi.getRandomValues({
+        length,
+        success(result) {
+          if (settled) return;
+          const buffer = result && result.randomValues;
+          // Native bridges can return an ArrayBuffer from another JS context.
+          // Checking its tag works across contexts, unlike instanceof.
+          if (
+            Object.prototype.toString.call(buffer) !== "[object ArrayBuffer]" ||
+            buffer.byteLength !== length
+          ) {
+            fail();
+            return;
+          }
+          try {
+            const bytes = new Uint8Array(buffer);
+            settled = true;
+            clearTimeout(timer);
+            resolve(bytes);
+          } catch (_) {
+            fail();
+          }
+        },
+        fail,
+      });
+    } catch (_) {
+      fail();
+    }
   });
+}
+
+function localRoll(count) {
+  // A local fallback keeps this family game usable on unsupported clients.
+  // It is not intended for prizes, wagering, or security-sensitive decisions.
+  return Array.from({ length: count }, () => Math.floor(Math.random() * 6) + 1);
 }
 
 async function rollDice(count, wxApi) {
   const diceCount = normalizeDiceCount(count);
-  if (!wxApi || typeof wxApi.getUserCryptoManager !== "function") {
-    // Compatibility fallback for older clients: suitable for a family game,
-    // never for prizes, wagering, or any security-sensitive random decision.
-    return Array.from(
-      { length: diceCount },
-      () => Math.floor(Math.random() * 6) + 1,
-    );
+  if (!wxApi || typeof wxApi.getRandomValues !== "function") {
+    return localRoll(diceCount);
   }
 
-  const manager = wxApi.getUserCryptoManager();
-  if (!manager || typeof manager.getRandomValues !== "function") {
-    throw new Error("随机点数生成失败，请再掷一次。");
-  }
-
-  const results = [];
-  // Reject bytes 252–255 so every face has exactly 42 accepted byte values.
-  // A broken provider must not leave the page rolling forever.
-  for (
-    let attempt = 0;
-    results.length < diceCount && attempt < 128;
-    attempt += 1
-  ) {
-    const bytes = await randomBytes(manager, diceCount - results.length);
-    for (const byte of bytes) {
-      if (byte < 252) results.push((byte % 6) + 1);
+  try {
+    const results = [];
+    const deadline = Date.now() + RANDOM_TIMEOUT;
+    // Reject bytes 252–255 so every face has exactly 42 accepted byte values.
+    // Bound the entire request so fallback finishes within the roll animation.
+    for (
+      let attempt = 0;
+      results.length < diceCount && attempt < 128;
+      attempt += 1
+    ) {
+      const remaining = deadline - Date.now();
+      if (remaining <= 0) return localRoll(diceCount);
+      const bytes = await randomBytes(
+        wxApi,
+        diceCount - results.length,
+        remaining,
+      );
+      for (const byte of bytes) {
+        if (byte < 252) results.push((byte % 6) + 1);
+      }
     }
+    return results.length === diceCount ? results : localRoll(diceCount);
+  } catch (_) {
+    return localRoll(diceCount);
   }
-  if (results.length !== diceCount) {
-    throw new Error("随机点数生成失败，请再掷一次。");
-  }
-  return results;
 }
 
 module.exports = {
