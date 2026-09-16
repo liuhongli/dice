@@ -51,6 +51,11 @@
           d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8Z"
         />
       </symbol>
+      <symbol id="icon-photo" viewBox="0 0 24 24">
+        <rect x="3" y="3" width="18" height="18" rx="4" />
+        <circle cx="8.5" cy="8.5" r="1.5" />
+        <path d="m3 17 5-5 4 4 4-6 5 7" />
+      </symbol>
     </svg>
     <div class="page-shell">
       <header class="site-header">
@@ -92,7 +97,7 @@
           <div class="stage" id="stage">
             <div class="stage-top">
               <span class="stage-label"
-                ><span class="live-dot"></span> 好运发生地</span
+                ><span class="live-dot"></span> 以顶面点数为准</span
               ><span class="stage-badge" id="stage-badge"
                 >每一面，都有惊喜</span
               >
@@ -175,6 +180,214 @@
             </div>
           </aside>
         </section>
+
+        <details class="photo-customizer" id="photo-customizer">
+          <summary>
+            <span class="photo-title-icon"
+              ><svg class="icon"><use href="#icon-photo" /></svg
+            ></span>
+            <span class="photo-heading"
+              ><strong>给骰子穿新衣</strong
+              ><span>把喜欢的照片，放上骰子的六个面</span></span
+            >
+            <span class="photo-summary" id="photo-summary">原色骰子</span>
+            <span class="photo-chevron" aria-hidden="true">⌄</span>
+          </summary>
+          <fieldset class="photo-controls" id="photo-controls">
+            <legend class="sr-only">骰子背景设置</legend>
+            <div
+              class="photo-modes"
+              role="radiogroup"
+              aria-label="照片背景模式"
+            >
+              <label
+                ><input
+                  type="radio"
+                  name="photo-mode"
+                  value="default"
+                  checked
+                /><span>原色骰子</span></label
+              >
+              <label
+                ><input type="radio" name="photo-mode" value="single" /><span
+                  >一张铺满六面</span
+                ></label
+              >
+              <label
+                ><input type="radio" name="photo-mode" value="six" /><span
+                  >六个面分别设置</span
+                ></label
+              >
+            </div>
+            <div id="photo-single-panel" class="photo-single-panel" hidden>
+              <span class="single-photo-frame"
+                ><img
+                  id="single-photo-preview"
+                  alt="用于六个面的照片"
+                  hidden /><span id="single-photo-empty"
+                  ><svg class="icon"><use href="#icon-photo" /></svg></span
+              ></span>
+              <div class="photo-upload-copy">
+                <strong>一张照片，六面都是喜欢</strong>
+                <p>选一张照片作为所有骰子面的背景。</p>
+                <button
+                  type="button"
+                  class="photo-upload-button"
+                  id="choose-single-photo"
+                >
+                  从相册选择一张
+                </button>
+              </div>
+              <input
+                type="file"
+                accept="image/*"
+                id="single-photo-input"
+                hidden
+              />
+            </div>
+            <div id="photo-six-panel" hidden>
+              <div class="six-photo-heading">
+                <p id="six-photo-progress">
+                  点击每个面选图，也可以一次选择六张。
+                </p>
+                <button
+                  type="button"
+                  class="photo-upload-button"
+                  id="choose-six-photos"
+                >
+                  一次选择六张
+                </button>
+              </div>
+              <div class="face-photo-grid">
+                <button
+                  class="face-photo-slot"
+                  type="button"
+                  data-face="1"
+                  aria-label="设置 1 点面的背景"
+                >
+                  <span class="face-photo-image"
+                    ><img
+                      class="face-photo-preview"
+                      alt="1 点面的背景"
+                      hidden
+                    /><span class="face-photo-empty" aria-hidden="true"
+                      >+</span
+                    ></span
+                  ><span class="face-photo-label">1 点面</span>
+                </button>
+                <button
+                  class="face-photo-slot"
+                  type="button"
+                  data-face="2"
+                  aria-label="设置 2 点面的背景"
+                >
+                  <span class="face-photo-image"
+                    ><img
+                      class="face-photo-preview"
+                      alt="2 点面的背景"
+                      hidden
+                    /><span class="face-photo-empty" aria-hidden="true"
+                      >+</span
+                    ></span
+                  ><span class="face-photo-label">2 点面</span>
+                </button>
+                <button
+                  class="face-photo-slot"
+                  type="button"
+                  data-face="3"
+                  aria-label="设置 3 点面的背景"
+                >
+                  <span class="face-photo-image"
+                    ><img
+                      class="face-photo-preview"
+                      alt="3 点面的背景"
+                      hidden
+                    /><span class="face-photo-empty" aria-hidden="true"
+                      >+</span
+                    ></span
+                  ><span class="face-photo-label">3 点面</span>
+                </button>
+                <button
+                  class="face-photo-slot"
+                  type="button"
+                  data-face="4"
+                  aria-label="设置 4 点面的背景"
+                >
+                  <span class="face-photo-image"
+                    ><img
+                      class="face-photo-preview"
+                      alt="4 点面的背景"
+                      hidden
+                    /><span class="face-photo-empty" aria-hidden="true"
+                      >+</span
+                    ></span
+                  ><span class="face-photo-label">4 点面</span>
+                </button>
+                <button
+                  class="face-photo-slot"
+                  type="button"
+                  data-face="5"
+                  aria-label="设置 5 点面的背景"
+                >
+                  <span class="face-photo-image"
+                    ><img
+                      class="face-photo-preview"
+                      alt="5 点面的背景"
+                      hidden
+                    /><span class="face-photo-empty" aria-hidden="true"
+                      >+</span
+                    ></span
+                  ><span class="face-photo-label">5 点面</span>
+                </button>
+                <button
+                  class="face-photo-slot"
+                  type="button"
+                  data-face="6"
+                  aria-label="设置 6 点面的背景"
+                >
+                  <span class="face-photo-image"
+                    ><img
+                      class="face-photo-preview"
+                      alt="6 点面的背景"
+                      hidden
+                    /><span class="face-photo-empty" aria-hidden="true"
+                      >+</span
+                    ></span
+                  ><span class="face-photo-label">6 点面</span>
+                </button>
+              </div>
+              <p class="photo-help">
+                批量选图后，可以核对 1–6 点的预览；点击任意一面就能更换。
+              </p>
+              <input
+                type="file"
+                accept="image/*"
+                id="six-photo-input"
+                multiple
+                hidden
+              />
+              <input
+                type="file"
+                accept="image/*"
+                id="face-photo-input"
+                hidden
+              />
+            </div>
+            <div class="photo-footer">
+              <p>照片只保存在这台设备上，点数始终清晰可见。</p>
+              <button type="button" id="reset-photos" class="clear-button">
+                恢复原色并清除照片
+              </button>
+            </div>
+          </fieldset>
+          <p
+            id="photo-status"
+            class="photo-status"
+            role="status"
+            aria-live="polite"
+            aria-atomic="true"
+          ></p>
+        </details>
 
         <section class="history-section" aria-labelledby="history-title">
           <div class="history-heading">

@@ -1,5 +1,7 @@
 import { MAX_DICE, normalizeDiceCount, rollDice } from "./dice.js";
 import { createEffects } from "./effects.js";
+import { FACE_VALUES, TOP_ORIENTATIONS } from "./dice-geometry.js";
+import { createPhotoCustomizer } from "./photo-customizer.js";
 
 const $ = (selector) => document.querySelector(selector);
 const stage = $("#stage");
@@ -18,15 +20,6 @@ const pipPositions = {
   5: [1, 3, 5, 7, 9],
   6: [1, 3, 4, 6, 7, 9],
 };
-const faceValues = { front: 1, back: 6, right: 3, left: 4, top: 2, bottom: 5 };
-const orientations = {
-  1: [0, 0],
-  2: [-90, 0],
-  3: [0, -90],
-  4: [0, 90],
-  5: [90, 0],
-  6: [0, 180],
-};
 const palettes = [
   ["#fbfff6", "#d5e9d4", "#b3d4bd", "#378368"],
   ["#fff8f2", "#f4d9cb", "#e5baaa", "#cc7d65"],
@@ -40,6 +33,14 @@ let muted = false;
 let history = [];
 let rolling = false;
 let rollTimer;
+let displayedValues = [];
+let photoBusy = false;
+let photoCustomizer;
+let photoSettings = {
+  mode: "default",
+  single: null,
+  faces: Array(6).fill(null),
+};
 
 function restore() {
   try {
@@ -89,25 +90,38 @@ function pips(value, className) {
 }
 
 function renderDice(values) {
+  displayedValues = [...values];
   field.dataset.count = String(values.length);
   field.innerHTML = values
     .map((value, index) => {
       const [face, shade, edge, pip] = palettes[index];
-      const [rx, ry] = orientations[value];
-      return `<div class="die" role="img" aria-label="第 ${index + 1} 颗骰子：${value} 点" style="--index:${index};--face:${face};--shade:${shade};--edge:${edge};--pip-color:${pip};--rx:${rx}deg;--ry:${ry}deg"><div class="dice-tilt"><div class="dice-cube">${Object.entries(
-        faceValues,
+      const [rx, ry] = TOP_ORIENTATIONS[value];
+      return `<div class="die" role="img" aria-label="第 ${index + 1} 颗骰子顶面：${value} 点" style="--index:${index};--face:${face};--shade:${shade};--edge:${edge};--pip-color:${pip};--rx:${rx}deg;--ry:${ry}deg"><div class="dice-tilt"><div class="dice-cube">${Object.entries(
+        FACE_VALUES,
       )
         .map(
           ([side, dots]) =>
-            `<div class="dice-face ${side}">${pips(dots, "pip")}</div>`,
+            `<div class="dice-face ${side}${dots === value ? " is-result" : ""}" data-value="${dots}">${pips(dots, "pip")}</div>`,
         )
         .join("")}</div></div></div>`;
     })
     .join("");
   field.setAttribute(
     "aria-label",
-    `${values.length} 颗骰子，点数为 ${values.join("、")}`,
+    `${values.length} 颗骰子，顶面点数为 ${values.join("、")}`,
   );
+  for (const face of field.querySelectorAll(".dice-face")) {
+    const photo =
+      photoSettings.mode === "single"
+        ? photoSettings.single
+        : photoSettings.mode === "six"
+          ? photoSettings.faces[Number(face.dataset.value) - 1]
+          : null;
+    if (photo) {
+      face.classList.add("has-photo");
+      face.style.backgroundImage = `linear-gradient(#ffffff18, #ffffff18), url("${photo}")`;
+    }
+  }
 }
 
 function setCount(value) {
@@ -162,10 +176,11 @@ function renderHistory() {
 
 function setBusy(busy) {
   rolling = busy;
-  rollButton.disabled = busy;
-  options.disabled = busy;
+  rollButton.disabled = busy || photoBusy;
+  options.disabled = busy || photoBusy;
   stage.setAttribute("aria-busy", String(busy));
   stage.classList.toggle("is-rolling", busy);
+  photoCustomizer?.setRolling(busy);
 }
 
 function finishRoll(values) {
@@ -176,7 +191,7 @@ function finishRoll(values) {
   const sixes = values.filter((value) => value === 6).length;
   $("#result-box").classList.add("has-result");
   $("#result-label").textContent =
-    count === 1 ? "这次的好运" : `${count} 颗骰子 · 总点数`;
+    count === 1 ? "这次的顶面点数" : `${count} 颗骰子 · 顶面合计`;
   $("#result-detail").textContent =
     count === 1 ? "轮到你迈出快乐的一步啦" : `${values.join(" + ")} = ${total}`;
   $("#result-total").textContent = String(total);
@@ -188,7 +203,7 @@ function finishRoll(values) {
       ];
   $("#roll-button-text").textContent = "再掷一次";
   $("#live-status").textContent =
-    `投掷完成，${values.map((value, index) => `第 ${index + 1} 颗 ${value} 点`).join("，")}，合计 ${total} 点。`;
+    `投掷完成，${values.map((value, index) => `第 ${index + 1} 颗顶面 ${value} 点`).join("，")}，合计 ${total} 点。`;
   history.unshift({ values, time: Date.now() });
   history = history.slice(0, 8);
   renderHistory();
@@ -197,7 +212,7 @@ function finishRoll(values) {
 }
 
 function roll() {
-  if (rolling) return;
+  if (rolling || photoBusy) return;
   let values;
   try {
     values = rollDice(count);
@@ -226,9 +241,20 @@ restore();
 setCount(count);
 renderSound();
 renderHistory();
+photoCustomizer = createPhotoCustomizer({
+  onChange(settings) {
+    photoSettings = settings;
+    renderDice(displayedValues);
+  },
+  onBusy(busy) {
+    photoBusy = busy;
+    rollButton.disabled = rolling || busy;
+    options.disabled = rolling || busy;
+  },
+});
 rollButton.addEventListener("click", roll);
 options.addEventListener("change", (event) => {
-  if (!rolling) setCount(event.target.value);
+  if (!rolling && !photoBusy) setCount(event.target.value);
 });
 soundButton.addEventListener("click", () => {
   muted = !muted;
@@ -253,7 +279,7 @@ document.addEventListener("keydown", (event) => {
     return;
   if (
     event.target.closest(
-      'button, input, select, textarea, a, [contenteditable="true"]',
+      'button, input, select, textarea, a, summary, [contenteditable="true"]',
     )
   )
     return;
