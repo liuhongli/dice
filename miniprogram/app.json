@@ -1,0 +1,12 @@
+{
+  "pages": ["pages/index/index"],
+  "window": {
+    "navigationBarTitleText": "骰子派对",
+    "navigationBarBackgroundColor": "#f7f6ef",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#f7f6ef"
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents"
+}

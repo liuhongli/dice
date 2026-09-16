@@ -3,3 +3,7 @@ dist/
 .DS_Store
 test-results/
 .playwright/
+project.private.config.json
+private.*.key
+miniprogram_npm/
+artifacts/

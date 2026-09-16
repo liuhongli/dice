@@ -1,0 +1,4 @@
+{
+  "desc": "骰子派对页面索引",
+  "rules": [{ "action": "allow", "page": "*" }]
+}

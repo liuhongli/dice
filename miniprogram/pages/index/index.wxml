@@ -1,0 +1,331 @@
+<view class="page-shell">
+  <view class="site-header">
+    <view class="brand"
+      ><view class="brand-mark">⚄</view
+      ><text>骰子派对<text class="brand-dot">.</text></text></view
+    >
+    <button
+      class="sound-button"
+      bindtap="onToggleSound"
+      aria-label="{{soundEnabled ? '关闭音效' : '打开音效'}}"
+    >
+      {{soundEnabled ? '♫ 音效开' : '♪ 音效关'}}
+    </button>
+  </view>
+
+  <view class="intro">
+    <view class="eyebrow">✦ 大小朋友的快乐小工具</view>
+    <view class="intro-title"
+      >准备好，掷出<text class="title-highlight">快乐</text>！</view
+    >
+    <text class="intro-description">一点点运气，满满的快乐。</text>
+    <text class="intro-star">✧</text>
+  </view>
+
+  <view class="stage count-{{count}} {{rolling ? 'rolling' : ''}}">
+    <view class="stage-top"
+      ><view class="stage-label"
+        ><view class="live-dot"></view><text>以顶面点数为准</text></view
+      ><text class="stage-badge">{{stageBadge}}</text></view
+    >
+    <view class="stage-orbit orbit-one"></view
+    ><view class="stage-orbit orbit-two"></view>
+    <text class="stage-spark spark-one">✧</text
+    ><text class="stage-spark spark-two">✦</text>
+    <view
+      class="dice-field"
+      aria-label="{{rolling ? '骰子正在转动' : resultDetail}}"
+    >
+      <view wx:for="{{dice}}" wx:for-item="die" wx:key="id" class="die-slot">
+        <view class="die-shadow"></view>
+        <view class="die-motion">
+          <view class="die">
+            <view class="dice-tilt">
+              <view
+                class="dice-cube"
+                style="--rx:{{die.rx}}deg;--ry:{{die.ry}}deg"
+              >
+                <view
+                  wx:for="{{die.faces}}"
+                  wx:for-item="face"
+                  wx:key="side"
+                  class="dice-face {{face.side}} {{face.value === die.value ? 'is-result' : ''}} {{face.photo ? 'has-photo' : ''}}"
+                >
+                  <image
+                    wx:if="{{face.photo}}"
+                    class="face-photo"
+                    src="{{face.photo}}"
+                    mode="aspectFill"
+                  ></image>
+                  <view
+                    wx:for="{{face.pips}}"
+                    wx:for-item="pip"
+                    wx:key="id"
+                    class="pip {{face.value === 1 ? 'pip-one' : ''}}"
+                    style="left:{{pip.left}}%;top:{{pip.top}}%"
+                  ></view>
+                </view>
+              </view>
+            </view>
+          </view>
+        </view>
+        <view class="die-value {{rolling ? 'value-hidden' : ''}}"
+          >{{die.value}} 点</view
+        >
+      </view>
+    </view>
+    <view class="stage-caption"
+      ><text class="caption-spark">✦</text><text>{{stageCaption}}</text
+      ><text class="caption-spark">✦</text></view
+    >
+    <view wx:if="{{rolling}}" class="roll-progress"
+      ><view class="progress-fill"></view
+    ></view>
+  </view>
+
+  <view class="control-card">
+    <view class="control-heading"
+      ><text class="section-kicker">LET’S PLAY</text
+      ><text class="tiny-dice">⚄</text></view
+    >
+    <view class="control-title">今天，玩几颗？</view>
+    <text class="control-description">选好骰子，好运马上出发。</text>
+    <view class="dice-options">
+      <button
+        wx:for="{{countOptions}}"
+        wx:key="*this"
+        class="count-option {{count === item ? 'selected' : ''}}"
+        data-value="{{item}}"
+        bindtap="onCountTap"
+        disabled="{{rolling || photoBusy}}"
+        aria-label="{{item}} 颗骰子"
+      >
+        {{item}}
+      </button>
+    </view>
+    <view class="quantity-hint"
+      ><text>{{count}} 颗骰子</text><text>每颗 1–6 点</text></view
+    >
+    <view class="result-box {{rolling ? 'result-rolling' : ''}}">
+      <view class="result-copy"
+        ><text class="result-label">{{resultTitle}}</text
+        ><text class="result-detail">{{resultDetail}}</text></view
+      >
+      <text class="result-total">{{totalText}}</text>
+    </view>
+    <button
+      class="roll-button"
+      bindtap="onRoll"
+      disabled="{{rolling || photoBusy}}"
+      hover-class="roll-button-pressed"
+    >
+      <text class="roll-icon">⚄</text
+      ><text>{{rolling ? '好运转起来…' : '掷出好运'}}</text
+      ><text class="button-arrow">→</text>
+    </button>
+    <text class="tap-hint">轻轻一点，让好运转起来</text>
+  </view>
+
+  <view class="photo-card">
+    <button
+      class="photo-toggle"
+      bindtap="onTogglePhotos"
+      aria-expanded="{{photoOpen}}"
+    >
+      <view class="photo-title-icon">✿</view>
+      <view class="photo-heading"
+        ><text class="photo-title">给骰子穿新衣</text
+        ><text class="photo-subtitle"
+          >把喜欢的照片，放上骰子的六个面</text
+        ></view
+      >
+      <text class="photo-chevron">{{photoOpen ? '−' : '+'}}</text>
+    </button>
+    <view wx:if="{{photoOpen}}" class="photo-controls">
+      <view class="photo-modes">
+        <button
+          class="mode-button {{photoMode === 'default' ? 'mode-selected' : ''}}"
+          data-mode="default"
+          bindtap="onModeTap"
+          disabled="{{rolling || photoBusy}}"
+        >
+          原色骰子
+        </button>
+        <button
+          class="mode-button {{photoMode === 'single' ? 'mode-selected' : ''}}"
+          data-mode="single"
+          bindtap="onModeTap"
+          disabled="{{rolling || photoBusy}}"
+        >
+          一张铺满六面
+        </button>
+        <button
+          class="mode-button {{photoMode === 'six' ? 'mode-selected' : ''}}"
+          data-mode="six"
+          bindtap="onModeTap"
+          disabled="{{rolling || photoBusy}}"
+        >
+          六面分别设置
+        </button>
+      </view>
+      <view wx:if="{{photoMode === 'default'}}" class="photo-default"
+        ><text class="default-dice">⚄</text
+        ><text>清清爽爽的原色，也很好看。</text></view
+      >
+      <view wx:elif="{{photoMode === 'single'}}" class="single-picker">
+        <button
+          class="single-preview"
+          bindtap="onChooseSingle"
+          disabled="{{rolling || photoBusy}}"
+          aria-label="从相册选择一张照片"
+        >
+          <image
+            wx:if="{{singlePhoto}}"
+            class="single-image"
+            src="{{singlePhoto}}"
+            mode="aspectFill"
+          ></image>
+          <text wx:else class="photo-plus">+</text>
+        </button>
+        <view class="single-copy"
+          ><text class="picker-title">一张喜欢的照片</text
+          ><text class="picker-description">六个面都穿同一件新衣。</text
+          ><button
+            class="small-button"
+            bindtap="onChooseSingle"
+            disabled="{{rolling || photoBusy}}"
+          >
+            {{singlePhoto ? '换一张照片' : '从相册选择'}}
+          </button></view
+        >
+      </view>
+      <view wx:elif="{{photoMode === 'six'}}" class="six-picker">
+        <text class="six-description"
+          >按 1–6 点分别选图，让每一面都有惊喜。</text
+        >
+        <view class="face-slots">
+          <view wx:for="{{facePhotos}}" wx:key="value" class="face-slot">
+            <button
+              class="face-picker"
+              data-value="{{item.value}}"
+              bindtap="onChooseFace"
+              disabled="{{rolling || photoBusy}}"
+              aria-label="设置 {{item.value}} 点面的照片"
+            >
+              <image
+                wx:if="{{item.path}}"
+                class="slot-image"
+                src="{{item.path}}"
+                mode="aspectFill"
+              ></image>
+              <text wx:else class="slot-plus">+</text>
+              <text class="slot-value">{{item.value}} 点</text>
+            </button>
+            <text class="slot-caption"
+              >{{item.path ? '点击换图' : '选择照片'}}</text
+            >
+          </view>
+        </view>
+        <button
+          class="batch-button"
+          bindtap="onChooseSix"
+          disabled="{{rolling || photoBusy}}"
+        >
+          一次选择 6 张照片
+        </button>
+        <text class="batch-hint">选好后核对 1–6 点的预览，可逐面更换。</text>
+      </view>
+      <view class="photo-footer"
+        ><text class="photo-status">{{photoStatus}}</text
+        ><button
+          class="reset-button"
+          bindtap="onResetPhotos"
+          disabled="{{rolling || photoBusy}}"
+        >
+          清除照片
+        </button></view
+      >
+      <text class="photo-note"
+        >照片只保存在当前设备，不会上传。请和爸爸妈妈一起选图哦。</text
+      >
+    </view>
+  </view>
+
+  <view class="history-card">
+    <view class="history-header"
+      ><view class="history-heading"
+        ><text class="history-symbol">◷</text><text>刚刚的好运</text
+        ><text class="history-count">最近 8 次</text></view
+      ><button
+        wx:if="{{history.length}}"
+        class="clear-button"
+        bindtap="onClearHistory"
+        disabled="{{rolling}}"
+      >
+        清空
+      </button></view
+    >
+    <view wx:if="{{!history.length}}" class="history-empty"
+      ><text class="empty-spark">✧</text
+      ><text>第一份好运，等你来掷。</text></view
+    >
+    <view wx:else class="history-list">
+      <view
+        wx:for="{{history}}"
+        wx:for-item="record"
+        wx:key="id"
+        class="history-row"
+      >
+        <text class="history-time">{{record.timeText}}</text>
+        <view class="history-values"
+          ><text
+            wx:for="{{record.values}}"
+            wx:for-item="value"
+            class="history-value"
+            >{{value}}</text
+          ></view
+        >
+        <view class="history-total"
+          ><text class="history-equals">共</text
+          ><text>{{record.total}}</text></view
+        >
+      </view>
+    </view>
+  </view>
+  <view class="page-footer"
+    ><text>♡</text><text>把屏幕里的好运，带到一起玩的时光里。</text></view
+  >
+</view>
+
+<view class="confetti-layer" aria-hidden="true"
+  ><view
+    wx:for="{{confetti}}"
+    wx:key="id"
+    class="confetti-piece"
+    style="{{item.style}}"
+  ></view
+></view>
+
+<view wx:if="{{privacyVisible}}" class="privacy-mask">
+  <view class="privacy-dialog" aria-role="dialog" aria-label="照片使用说明">
+    <text class="privacy-spark">✿</text
+    ><text class="privacy-title">一起给骰子选张照片</text>
+    <text class="privacy-copy"
+      >选图前，请和爸爸妈妈一起阅读隐私保护说明。所选照片仅用于骰子背景，保存在当前设备，不会上传。</text
+    >
+    <button class="privacy-link" bindtap="onViewPrivacyContract">
+      {{privacyContractName || '查看隐私保护指引'}}
+    </button>
+    <button
+      class="privacy-agree"
+      id="agree-privacy"
+      open-type="agreePrivacyAuthorization"
+      bindagreeprivacyauthorization="onPrivacyAgree"
+    >
+      同意并继续选图
+    </button>
+    <button class="privacy-decline" bindtap="onPrivacyDecline">
+      暂不选图，继续玩
+    </button>
+  </view>
+</view>

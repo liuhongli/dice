@@ -34,3 +34,9 @@ npm run preview
 在仓库 **Settings → Pages → Build and deployment → Source** 中选择 **GitHub Actions**。随后推送或在 Actions 页面手动运行部署工作流。
 
 预期访问地址：<https://liuhongli.github.io/dice/>。
+
+## 微信小程序
+
+原生小程序项目位于 `miniprogram/`，支持同样的顶面计点、动画、多骰子、音效及六面照片背景。在微信开发者工具中导入仓库根目录，填写自己的小程序 AppID 后编译预览；无需后端或网页域名。
+
+导入、隐私说明配置与发布步骤见 [小程序使用说明](miniprogram/README.md)。微信正式发布需要小程序账号、真机验证和平台审核，GitHub Pages 部署不会自动发布小程序。
