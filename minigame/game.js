@@ -110,6 +110,6 @@ if (wx.onWindowResize) wx.onWindowResize(() => {
 });
 try {
   if (wx.showShareMenu) wx.showShareMenu({ withShareTicket: false });
-  if (wx.onShareAppMessage) wx.onShareAppMessage(() => ({ title: "骰子派对 · 一点点运气，满满的快乐" }));
+  if (wx.onShareAppMessage) wx.onShareAppMessage(() => ({ title: "随机1-6 · 一点点运气，满满的快乐" }));
 } catch (_) {}
 frame();

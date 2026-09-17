@@ -1,5 +1,5 @@
 {
-  "description": "骰子派对 · 亲子掷骰子微信小游戏",
+  "description": "随机1-6 · 亲子掷骰子微信小游戏",
   "miniprogramRoot": "minigame/",
   "compileType": "game",
   "appid": "wxc553814253040b0e",

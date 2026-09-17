@@ -146,8 +146,8 @@ function createRenderer(canvas, initialMetrics) {
     ctx.save(); ctx.beginPath(); ctx.rect(0, safeTop, width, height - safeTop); ctx.clip(); ctx.translate(0, -scrollY);
     let y = Math.max(safeTop + 10, menuRect && menuRect.bottom ? menuRect.bottom + 9 : 0);
     tinyDie(x + 1, y, 26);
-    text('骰子派对', x + 36, y + 14, 19, COLORS.ink, 'left', 'bold');
-    text('.', x + 114, y + 12, 24, COLORS.green, 'left', 'bold');
+    text('随机1-6', x + 36, y + 14, 19, COLORS.ink, 'left', 'bold');
+    text('.', x + 103, y + 12, 24, COLORS.green, 'left', 'bold');
     button(x + w - 79, y - 1, 79, 30, state.soundEnabled ? '♫ 音效开' : '♪ 音效关', 'sound', undefined, false, false, 11);
     y += 49;
     text('准备好，掷出快乐！', width / 2, y, 25, COLORS.ink, 'center', 'bold');
